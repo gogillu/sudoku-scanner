@@ -69,9 +69,14 @@ class ImageGridProcessor:
                 end_x = start_x + cell_width
                 grid_part = frame[start_y:end_y, start_x:end_x]
 
+                # Convert to grayscale
+                gray_part = cv2.cvtColor(grid_part, cv2.COLOR_BGR2GRAY)
+                # Apply binary thresholding to make it purely black and white
+                _, bw_part = cv2.threshold(gray_part, 127, 255, cv2.THRESH_BINARY)
+
                 # Construct filename for the grid part
                 filename = f"grid_{row * self.grid_size + col + 1}.jpg"
                 filepath = os.path.join(output_dir, filename)
                 
                 # Save the grid part
-                cv2.imwrite(filepath, grid_part)
+                cv2.imwrite(filepath, bw_part)
