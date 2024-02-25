@@ -1,81 +1,76 @@
 import cv2
 import os
+from image_processor import ImageProcessor
+from video_projector import VideoProjector
 
 class CameraHandler:
     def __init__(self):
         self.capture = False
+        self.frames = []
         self.blink_status = False
-        self.blink_counter = 0  # Counter to control the blink speed
+        self.blink_counter = 0
 
     def draw_instructions(self, frame, text):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        text_background_height = 50  # Height of the black background for the text
-        frame_height, frame_width = frame.shape[:2]
-        # Extend frame to include a black background for the text below the video feed
-        extended_frame = cv2.copyMakeBorder(frame, 0, text_background_height, 0, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-        cv2.putText(extended_frame, text, (10, frame_height + 35), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        return extended_frame
+        text_size = cv2.getTextSize(text, font, 1, 2)[0]
+        text_x = (frame.shape[1] - text_size[0]) // 2
+        text_y = frame.shape[0] - 10
+        # Create a black background rectangle for the text
+        cv2.rectangle(frame, (0, frame.shape[0] - 40), (frame.shape[1], frame.shape[0]), (0, 0, 0), -1)
+        cv2.putText(frame, text, (text_x, text_y), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
     def draw_blinking_dot(self, frame):
-        # Only toggle the blink status after a certain number of frames have passed
-        if self.blink_counter % 20 == 0:  # Adjust this value to make the blinking slower or faster
+        if self.blink_counter % 30 == 0:  # Adjust this value for slower blinking
             self.blink_status = not self.blink_status
+        if self.blink_status:
+            cv2.circle(frame, (50, 50), 10, (0, 0, 255), -1)
         self.blink_counter += 1
 
-        # Adjusting the position of the blinking dot to be in the top left corner
-        dot_position = (30, 30)
-        dot_color = (0, 0, 255)  # Red color in BGR
-        dot_radius = 10
-
-        if self.blink_status:
-            cv2.circle(frame, dot_position, dot_radius, dot_color, -1)  # Filled circle
-
-    def run_camera(self):
-        cap = cv2.VideoCapture(0)  # Open the default camera
-        frame_rate = 24
-        count = 0
-        frames = []
-
+    def save_frame(self, frame, count):
         if not os.path.exists('input'):
             os.makedirs('input')
+        frame_path = os.path.join('input', f'frame_{count:04d}.jpg')
+        cv2.imwrite(frame_path, frame)
+
+    def run_camera(self):
+        cap = cv2.VideoCapture(0)
+        frame_count = 0
 
         while True:
             ret, frame = cap.read()
             if not ret:
-                break  # If the frame is not captured correctly, exit
+                break
 
-            # Draw the blinking dot first to ensure it appears on the video feed
             if self.capture:
                 self.draw_blinking_dot(frame)
+                self.save_frame(frame, frame_count)
+                frame_count += 1
 
-            if not self.capture:
-                extended_frame = self.draw_instructions(frame, "Press 'S' to start capturing")
-            else:
-                extended_frame = self.draw_instructions(frame, "Recording - Press 'E' to stop")
+            instruction_text = "Press 'S' to start capturing, 'E' to stop and process" if not self.capture else "Recording - Press 'E' to stop"
+            self.draw_instructions(frame, instruction_text)
 
-            cv2.imshow('Video Feed', extended_frame)
-
-            if self.capture:
-                # Capture frames at the rate of 24 frames per second
-                if count % (30 // frame_rate) == 0:
-                    frame_path = os.path.join('input', f'frame_{count}.jpg')
-                    cv2.imwrite(frame_path, frame)
-                    frames.append(frame)
-                count += 1
+            cv2.imshow('Video Feed', frame)
 
             key = cv2.waitKey(1) & 0xFF
 
             if key == ord('s') or key == ord('S'):
                 self.capture = True
-                count = 0  # Reset count when starting capture
-                self.blink_counter = 0  # Also reset the blink counter
+                self.frames = []
+                self.blink_counter = 0
+                frame_count = 0
+                print("Capture started.")
 
-            if key == ord('e') or key == ord('E'):
-                self.capture = False
-                print(f"Captured {len(frames)} frames.")
-                break  # Exit loop
+            elif key == ord('e') or key == ord('E'):
+                if self.capture:
+                    self.capture = False
+                    print("Processing and projecting captured frames...")
+                    processed_frames = [ImageProcessor.process_image(frame) for frame in self.frames]
+                    VideoProjector.project_video(processed_frames)
+                else:
+                    break
+
+            if self.capture:
+                self.frames.append(frame)
 
         cap.release()
         cv2.destroyAllWindows()
-
-        # Here you might want to handle `frames` list, e.g., saving or processing
