@@ -17,7 +17,6 @@ class CameraHandler:
         self.capture = False
         self.frame_count = 0
         self.frames = []
-        # self.video_creator = VideoCreator('output.mp4', 20.0, (640, 480))
 
     def run(self):
         while True:
@@ -28,10 +27,9 @@ class CameraHandler:
             if self.capture:
                 self.ui_manager.draw_blinking_dot(frame)
                 processed_frame = self.image_processor.process_image(frame, self.frame_count)
-                self.frames.append(processed_frame)
-                self.frame_saver.save_frame(processed_frame, self.frame_count)
+                self.frames.append(frame)
+                self.frame_saver.save_frame(frame, self.frame_count)
                 self.frame_count += 1
-                # self.video_creator.add_frame(processed_frame)
 
             self.ui_manager.draw_instructions(frame, "Press 'S' to start, 'E' to exit")
             cv2.imshow("Video Feed", frame)
@@ -40,15 +38,10 @@ class CameraHandler:
             if key == ord('s'):
                 self.capture = not self.capture
             elif key == ord('e'):
-                processed_frames = [frame for frame in self.frames]
-                VideoProjector.project_video(processed_frames)
-
-                # After breaking out of the loop
-                # self.video_creator.release()  # Finalize the video file
-                # VideoPlayer.play_video('output.mp4')  # Play the compiled video
-
+                # processed_frames = [frame for frame in self.frames]
+                # VideoProjector.project_video(self.frames)
+                
                 self.convert_frames_to_video(self.frames)
-
                 break
 
         self.camera_feed.release()
@@ -58,9 +51,6 @@ class CameraHandler:
         if not frames:
             raise ValueError("The list of frames is empty.")
 
-        print('--++--')
-        print(len(frames))
-        print('------')
         frame_height, frame_width = frames[0].shape[:2]
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_writer = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
