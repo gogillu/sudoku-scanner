@@ -3,3 +3,5 @@ processed
 *.jpg
 *.png
 .DS_Store
+*.mp4
+*.avi
