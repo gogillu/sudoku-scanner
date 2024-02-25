@@ -58,6 +58,52 @@ class CropBigGrid:
 
         return combined_frame
 
+    def adjust_and_concatenate_images_vertically(self, img1, img2):
+        """
+        Adjusts img1 and img2 to have the same width by padding the smaller image with a black background.
+        Then concatenates the images vertically (one on top of the other).
+
+        Args:
+        - img1: First image (numpy array).
+        - img2: Second image (numpy array).
+
+        Returns:
+        - Concatenated image.
+        """
+        # Get the height and width of both images
+        height1, width1 = img1.shape[:2]
+        height2, width2 = img2.shape[:2]
+
+        # Determine the maximum width
+        max_width = max(width1, width2)
+
+        # If img1 is narrower, pad it
+        if width1 < max_width:
+            # Calculate the padding size
+            diff = max_width - width1
+            # Create padding
+            pad = np.zeros((height1, diff, 3), dtype=np.uint8)
+            # Stack the padding on the side of img1
+            img1_padded = np.hstack((img1, pad))
+        else:
+            img1_padded = img1
+
+        # If img2 is narrower, pad it
+        if width2 < max_width:
+            # Calculate the padding size
+            diff = max_width - width2
+            # Create padding
+            pad = np.zeros((height2, diff, 3), dtype=np.uint8)
+            # Stack the padding on the side of img2
+            img2_padded = np.hstack((img2, pad))
+        else:
+            img2_padded = img2
+
+        # Concatenate the adjusted images vertically
+        combined_frame = np.vstack((img1_padded, img2_padded))
+
+        return combined_frame
+
     def get_combined_video_capture_and_cropped_full_grid(self, frame):
         full_frame, cropped_grid = self.contour_processor.process_image(frame)
 
