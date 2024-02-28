@@ -147,6 +147,31 @@ class ContourProcessor:
 
         return contour_img #,big_square_contour_found
 
+    def order_points(self, pts):
+        """
+        Initialize a list of coordinates that will be ordered
+        such that the first entry in the list is the top-left,
+        the second entry is the top-right, the third is the
+        bottom-right, and the fourth is the bottom-left.
+        """
+        rect = np.zeros((4, 2), dtype="float32")
+
+        # The top-left point will have the smallest sum, whereas
+        # the bottom-right point will have the largest sum
+        s = pts.sum(axis=1)
+        rect[0] = pts[np.argmin(s)]
+        rect[2] = pts[np.argmax(s)]
+
+        # Now, compute the difference between the points, the
+        # top-right point will have the smallest difference,
+        # whereas the bottom-left will have the largest difference
+        diff = np.diff(pts, axis=1)
+        rect[1] = pts[np.argmin(diff)]
+        rect[3] = pts[np.argmax(diff)]
+
+        # Return the ordered coordinates
+        return rect
+
     def crop_to_biggest_contour(self, frame):
         """
         Processes the given frame, finds contours, identifies the biggest contour,
@@ -188,10 +213,33 @@ class ContourProcessor:
         # Find the biggest contour based on area
         biggest_contour = max(contours, key=cv2.contourArea)
         
-        # Get the bounding box of the biggest contour
-        x, y, w, h = cv2.boundingRect(biggest_contour)
+        # # Get the bounding box of the biggest contour
+        # x, y, w, h = cv2.boundingRect(biggest_contour)
         
-        # Crop the image to this bounding box
-        cropped_image = frame[y:y+h, x:x+w]
+        # # Crop the image to this bounding box
+        # cropped_image = frame[y:y+h, x:x+w]
 
-        return cropped_image
+        # warped_image = frame
+
+        epsilon = 0.1 * cv2.arcLength(biggest_contour, True)
+        approx = cv2.approxPolyDP(biggest_contour, epsilon, True)
+
+        if len(approx) == 4:
+            # Order the points in the contour
+            ordered_src_pts = self.order_points(approx.reshape(4, 2))
+
+            # Destination points in the same order
+            side_length = 500
+            ordered_dst_pts = np.array([
+                [0, 0],
+                [side_length - 1, 0],
+                [side_length - 1, side_length - 1],
+                [0, side_length - 1]],
+                dtype="float32")
+
+            # Compute the perspective transform matrix and apply it
+            matrix = cv2.getPerspectiveTransform(ordered_src_pts, ordered_dst_pts)
+            warped_image = cv2.warpPerspective(frame, matrix, (side_length, side_length))
+
+
+        return warped_image

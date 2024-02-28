@@ -33,7 +33,7 @@ class SudokuUserFeedbackHandler:
             # cv2.imshow('combined grid', combined_frame_81)
 
             row2 = self.crop_big_grid.adjust_and_concatenate_images(contour_img, combined_frame_81)
-            self.image_grid_processor.save_grid_parts(combined_frame_81)
+            self.image_grid_processor.save_grid_parts(cropped_grid_copy)
 
             combine_feed_grid_small_contour = self.crop_big_grid.adjust_and_concatenate_images_vertically(combined_frame,row2)
             cv2.imshow('small contours', combine_feed_grid_small_contour)
