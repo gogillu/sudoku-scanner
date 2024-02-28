@@ -57,6 +57,51 @@ class CropBigGrid:
         combined_frame = np.hstack((img1_padded, img2_padded))
 
         return combined_frame
+    
+    def adjust_and_concatenate_images_color_with_gray(self, img1, img2):
+        """
+        Adjusts img1 (colorful) and img2 (black and white) to have the same height by padding the smaller image with a black background.
+        Converts img2 to a 3-channel BGR image if it is grayscale.
+        Then concatenates the images side by side.
+
+        Args:
+        - img1: First image (color, numpy array).
+        - img2: Second image (grayscale, numpy array).
+
+        Returns:
+        - Concatenated image.
+        """
+        # Convert img2 to BGR if it is grayscale
+        if len(img2.shape) == 2:  # img2 is grayscale
+            img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+
+        # Get the height and width of both images
+        height1, width1 = img1.shape[:2]
+        height2, width2 = img2.shape[:2]
+
+        # Determine the maximum height
+        max_height = max(height1, height2)
+
+        # If img1 is shorter, pad it
+        if height1 < max_height:
+            diff = max_height - height1
+            pad = np.zeros((diff, width1, 3), dtype=np.uint8)
+            img1_padded = np.vstack((img1, pad))
+        else:
+            img1_padded = img1
+
+        # If img2 is shorter, pad it
+        if height2 < max_height:
+            diff = max_height - height2
+            pad = np.zeros((diff, width2, 3), dtype=np.uint8)
+            img2_padded = np.vstack((img2, pad))
+        else:
+            img2_padded = img2
+
+        # Concatenate the adjusted images side by side
+        combined_image = np.hstack((img1_padded, img2_padded))
+
+        return combined_image
 
     def adjust_and_concatenate_images_vertically(self, img1, img2):
         """

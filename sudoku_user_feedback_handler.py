@@ -30,9 +30,10 @@ class SudokuUserFeedbackHandler:
 
             cropped_grid_copy = cropped_grid.copy()
             combined_frame_81 = self.image_grid_processor.divide_and_combine_frame(cropped_grid_copy)
+            combined_frame_81_BnW_smaller = self.image_grid_processor.divide_and_combine_small_cropped_frame_black_n_white(cropped_grid_copy)
             # cv2.imshow('combined grid', combined_frame_81)
 
-            row2 = self.crop_big_grid.adjust_and_concatenate_images(contour_img, combined_frame_81)
+            row2 = self.crop_big_grid.adjust_and_concatenate_images_color_with_gray(self.crop_big_grid.adjust_and_concatenate_images(contour_img, combined_frame_81),combined_frame_81_BnW_smaller)
             self.image_grid_processor.save_grid_parts(cropped_grid_copy)
 
             combine_feed_grid_small_contour = self.crop_big_grid.adjust_and_concatenate_images_vertically(combined_frame,row2)

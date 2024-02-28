@@ -312,7 +312,7 @@ if __name__ == "__main__":
                     digit, confidence = recognizer.predict(frame_resized)
                     # digit = predict_digit_new(full_path)
                     print(digit,confidence)
-                    if confidence > 0.01:
+                    if confidence > 0.41:
                         matrix[i][j] =  digit #extract_digits(image_path)
                     else:
                         matrix[i][j] = ' '
