@@ -5,6 +5,7 @@ import cv2
 import os
 from PIL import Image
 import pytesseract
+from tenserflow_machine_digit_predict_model import predict_with_teachable_ml
 
 # Update this line with the correct path to your Tesseract executable
 # pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
@@ -85,10 +86,10 @@ def crop_image(image_path):
     height, width = img.shape[:2]
     
     # Calculate the cropping dimensions
-    left = int(width * 0.15)
-    top = int(height * 0.15)
-    right = int(width * 0.85)
-    bottom = int(height * 0.85)
+    left = int(width * 0.05)
+    top = int(height * 0.05)
+    right = int(width * 0.95)
+    bottom = int(height * 0.95)
     
     # Crop the image using array slicing
     cropped_img = img[top:bottom, left:right]
@@ -276,6 +277,27 @@ def get_mnist_model(model_path='mnist_model.h5'):
     
     return model
 
+def predict_machine_written_text(image_path):
+    """
+    Predicts machine-written text from an image file using Tesseract OCR.
+
+    Args:
+    - image_path: Path to the image file containing the text.
+
+    Returns:
+    - Extracted text as a string.
+    """
+    # Specify the path to the Tesseract executable if not in your PATH
+    # pytesseract.pytesseract.tesseract_cmd = r'<full_path_to_your_tesseract_executable>'
+    
+    # Load the image
+    img = Image.open(image_path)
+    
+    # Use Tesseract to do OCR on the image
+    text = pytesseract.image_to_string(img)
+    
+    return text
+
 # Example usage
 if __name__ == "__main__":
     recognizer = DigitRecognizer()
@@ -309,14 +331,16 @@ if __name__ == "__main__":
                 if frame is not None:
                     # matrix[i][j] = get_text_from_image(image_path) #predict_digit("temp_"+image_path)
                     print(image_path)
-                    digit, confidence = recognizer.predict(frame_resized)
-                    # digit = predict_digit_new(full_path)
-                    print(digit,confidence)
-                    if confidence > 0.41:
-                        matrix[i][j] =  digit #extract_digits(image_path)
-                    else:
-                        matrix[i][j] = ' '
-                    print(f"Predicted Digit: {digit}, Confidence: {confidence}")
+                    matrix[i][j] = predict_with_teachable_ml('temp_'+image_path)
+                    print(matrix[i][j],"\n\n")
+                    # digit, confidence = recognizer.predict(frame_resized)
+                    # # digit = predict_digit_new(full_path)
+                    # print(digit,confidence)
+                    # if confidence > 0.41:
+                    #     matrix[i][j] =  digit #extract_digits(image_path)
+                    # else:
+                    #     matrix[i][j] = ' '
+                    # print(f"Predicted Digit: {digit}, Confidence: {confidence}")
                 else:
                     print("Error loading the image.")
 
@@ -326,5 +350,8 @@ if __name__ == "__main__":
     for i in range(0,9):
         print('\n')
         for j in range(0,9):
-            print(matrix[i][j],end=' ')
+            if matrix[i][j] == 10:
+                print(" ",end=' ')
+            else:
+                print(matrix[i][j],end=' ')
 
