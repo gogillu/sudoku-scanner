@@ -5,7 +5,9 @@ import cv2
 import os
 from PIL import Image
 import pytesseract
-from tenserflow_machine_digit_predict_model import predict_with_teachable_ml
+from tenserflow_machine_digit_predict_model import *
+from datetime import datetime
+import time
 
 # Update this line with the correct path to your Tesseract executable
 # pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
@@ -298,12 +300,46 @@ def predict_machine_written_text(image_path):
     
     return text
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import numpy as np
+from PIL import Image, ImageOps
+from tensorflow.keras.models import load_model
+
+# Function to run predictions for a matrix of images
+def run_predictions_for_matrix(image_matrix, model, class_names, max_workers=10):
+    # Initialize an empty 9x9 matrix for results
+    results_matrix = [[None for _ in range(9)] for _ in range(9)]
+    
+    # Flatten the matrix to a list for easier processing with ThreadPoolExecutor
+    flattened_images = [(i, j, image_matrix[i][j]) for i in range(9) for j in range(9)]
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_position = {executor.submit(predict_with_teachable_ml_optimized, img[2], model, class_names): img[:2] for img in flattened_images}
+        
+        for future in as_completed(future_to_position):
+            position = future_to_position[future]
+            try:
+                result = future.result()
+                # Store the result in the corresponding position in the results matrix
+                print(results_matrix[position[0]][position[0]])
+                results_matrix[position[0]][position[1]] = result
+            except Exception as exc:
+                print(f"Image at position {position} generated an exception: {exc}")
+    
+    return results_matrix
+
+
 # Example usage
 if __name__ == "__main__":
+    start_time = datetime.now()
     recognizer = DigitRecognizer()
-    get_mnist_model()
+    # get_mnist_model()
 
     matrix = [[0] * 9 for _ in range(9)]
+    img_matrix = [[0] * 9 for _ in range(9)]
+
+    model, class_names = loadModel()
     
     z = 0
     for i in range(0,9):
@@ -318,34 +354,45 @@ if __name__ == "__main__":
                 print(' ')
                 z += 1
 
-                # Load an image
+                img_matrix[i][j] = 'individual_grids/grid_'+str(z)+'.jpg'
                 image_path = 'individual_grids/grid_'+str(z)+'.jpg'  # Specify the path to an image of a digit
-                frame = cv2.imread(image_path)
-                # print(full_path)
-                cropped_image = crop_image(image_path)
+                matrix[i][j] = predict_with_teachable_ml_optimized(image_path,model,class_names)
+                # print(img_matrix[i][j])
 
-                # cv2.imshow("cropped",cropped_image)
-                frame_resized = cv2.resize(cropped_image, (28, 28))
-                cv2.imwrite('temp_'+image_path, frame_resized)
+
+                # # Load an image
+                # frame = cv2.imread(image_path)
+                # # print(full_path)
+                # cropped_image = crop_image(image_path)
+
+                # # cv2.imshow("cropped",cropped_image)
+                # frame_resized = cv2.resize(cropped_image, (28, 28))
+                # cv2.imwrite('temp_'+image_path, frame_resized)
                 
-                if frame is not None:
-                    # matrix[i][j] = get_text_from_image(image_path) #predict_digit("temp_"+image_path)
-                    print(image_path)
-                    matrix[i][j] = predict_with_teachable_ml('temp_'+image_path)
-                    print(matrix[i][j],"\n\n")
-                    # digit, confidence = recognizer.predict(frame_resized)
-                    # # digit = predict_digit_new(full_path)
-                    # print(digit,confidence)
-                    # if confidence > 0.41:
-                    #     matrix[i][j] =  digit #extract_digits(image_path)
-                    # else:
-                    #     matrix[i][j] = ' '
-                    # print(f"Predicted Digit: {digit}, Confidence: {confidence}")
-                else:
-                    print("Error loading the image.")
+                # if frame is not None:
+                #     # matrix[i][j] = get_text_from_image(image_path) #predict_digit("temp_"+image_path)
+                #     print(image_path)
+                #     matrix[i][j] = predict_with_teachable_ml_optimized(image_path,model,class_names)
+                #     print(matrix[i][j],"\n\n")
+                #     # digit, confidence = recognizer.predict(frame_resized)
+                #     # # digit = predict_digit_new(full_path)
+                #     # print(digit,confidence)
+                #     # if confidence > 0.41:
+                #     #     matrix[i][j] =  digit #extract_digits(image_path)
+                #     # else:
+                #     #     matrix[i][j] = ' '
+                #     # print(f"Predicted Digit: {digit}, Confidence: {confidence}")
+                # else:
+                #     print("Error loading the image.")
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit
-                    break
+                # if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit
+                #     break
+
+    # results_matrix = run_predictions_for_matrix(img_matrix, model, class_names, max_workers=6)
+
+    # print(results_matrix)
+    # for r in results_matrix:
+    #     print(r)
 
     for i in range(0,9):
         print('\n')
@@ -355,3 +402,11 @@ if __name__ == "__main__":
             else:
                 print(matrix[i][j],end=' ')
 
+    end_time = datetime.now()
+    # Calculate the delta between end time and start time
+    delta = end_time - start_time
+
+    # Get the total number of seconds from the delta
+    delta_seconds = delta.total_seconds()
+
+    print(f"Total elapsed time in seconds: {delta_seconds}")

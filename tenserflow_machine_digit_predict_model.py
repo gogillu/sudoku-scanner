@@ -44,7 +44,31 @@ def predict_with_teachable_ml(image_path):
     print("Class:", class_name[2:], index, end="")
     print("Confidence Score:", confidence_score)
 
-    return index+1
+    return (index+1)%10
+
+def loadModel():
+    # Load the model and labels outside the function
+    model = load_model("keras_Model.h5/keras_Model.h5", compile=False)
+    with open("keras_Model.h5/labels.txt", "r") as file:
+        class_names = file.readlines()
+
+    return model,class_names
+
+def predict_with_teachable_ml_optimized(image_path, model, class_names):
+    # Function body remains mostly the same, minus model and labels loading
+    data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+    image = Image.open(image_path).convert("RGB")
+    size = (224, 224)
+    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+    image_array = np.asarray(image)
+    normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+    data[0] = normalized_image_array
+    prediction = model.predict(data)
+    index = np.argmax(prediction)
+    class_name = class_names[index].strip()
+    confidence_score = prediction[0][index]
+    print("Class:", class_name, "Confidence Score:", confidence_score)
+    return (index + 1) % 10
 
 
 predict_with_teachable_ml("individual_grids/grid_74.jpg")
