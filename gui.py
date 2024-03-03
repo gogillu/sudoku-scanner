@@ -6,6 +6,49 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from tenserflow_machine_digit_predict_model import *
 import threading
 
+from dlx import DLX
+import numpy as np
+
+def solve_sudoku_instantly(M):
+
+    # print(M)
+    matrix = M
+    # i=0
+    # for _ in range(9):
+    #     row = []
+    #     j=0
+    #     for _ in range(9):
+    #         if M[i][j].isdigit():
+    #             row.append(int(M[i][j]))
+    #         else:
+    #             row.append(0)
+    
+    #         j += 1
+    #     i += 1
+    #     matrix.append(row)
+
+    dlx_matrix = np.zeros((9, 9, 9), dtype=int)
+
+    for i in range(9):
+        for j in range(9):
+            if matrix[i][j] != 0:
+                num = matrix[i][j] - 1
+                dlx_matrix[i, j, num] = 1
+
+    dlx_solver = DLX(dlx_matrix)
+    solution = dlx_solver.solve_unique()
+
+    if solution is None:
+        print("No solution exists")
+        return None
+
+    result_matrix = [[0 for _ in range(9)] for _ in range(9)]
+    for row in solution:
+        for r, c, num in row:
+            result_matrix[r][c] = num + 1
+
+    return result_matrix
+
 class Worker(QThread):
     update_signal = pyqtSignal(object)  # Signal to update the UI
 
@@ -16,6 +59,9 @@ class Worker(QThread):
             time.sleep(0.05)  # Sleep for 1 second
             new_matrix = generate_random_matrix()
             self.update_signal.emit(new_matrix)  # Emit the signal with the new matrix
+
+    def register_ui(self, main_window):
+        self.main_window = main_window
 
     def is_valid_move(self, row, col, num, matrix):
         # Check row
@@ -37,42 +83,47 @@ class Worker(QThread):
 
         return True
 
-    def solve_sudoku(self, matrix):
+    def solve_sudoku(self, matrix,responsive=True, ui_resp = 0.002):
         for i in range(9):
             for j in range(9):
                 if matrix[i][j] == 0:
                     for num in range(1, 10):
                         if self.is_valid_move(i, j, num, matrix):
                             matrix[i][j] = num
-                            time.sleep(0.00000000011)
-                            self.update_signal.emit(transform_1_9_or_empty_sudoku(matrix))
+                            if responsive:
+                                time.sleep(ui_resp)
+                            # time.sleep(0.00000000011)
+                            self.update_signal.emit(self.transform_1_9_or_empty_sudoku(matrix))
                             # time.sleep(6)                            
                             if self.solve_sudoku(matrix):
-                                # time.sleep(0.05)
-                                self.update_signal.emit((matrix))
-                                print(matrix)
+                                # time.sleep(0.00000000011)
+                                # self.update_signal.emit(self.transform_1_9_or_empty_sudoku(matrix))
+                                # print(matrix)
                                 return True
                             matrix[i][j] = 0  # Undo the choice if it doesn't lead to a solution
                     return False
         return True
     
-def transform_1_9_or_empty_sudoku(matrix):
-    # nM = [["" for _ in range(9)] for _ in range(9)]  # Initialize a 9x9 matrix with all zeros
-    nM = []
-    i=0
-    for _ in range(9):
-        row = []
-        j=0
+    def transform_1_9_or_empty_sudoku(self, matrix):
+        # nM = [["" for _ in range(9)] for _ in range(9)]  # Initialize a 9x9 matrix with all zeros
+        nM = []
+        i=0
         for _ in range(9):
-            if matrix[i][j] > 0:
-                row.append(str(matrix[i][j]))
-            else:
-                row.append("")
-            j += 1
-        i += 1
-        nM.append(row)
+            row = []
+            j=0
+            for _ in range(9):
+                if matrix[i][j] > 0:
+                    row.append(str(matrix[i][j]))
+                else:
+                    row.append("")
+        
+                j += 1
+            i += 1
+            nM.append(row)
 
-    return nM
+        return nM
+
+
     # for i in range(0,9):
     #     for j in range(0,9):
     #         print(i,j,matrix[i][j],type(matrix[i][j]),matrix[i][j] == 0)
@@ -91,8 +142,10 @@ class MainWindow(QWidget):
     def __init__(self, matrix, worker):
         super().__init__()
         self.matrix = matrix
+        self.prefilled_matrix = [[False] * 9 for _ in range(9)]
         self.worker = worker
         self.model, self.class_names = loadModel()
+        self.edit_boxes = []
         self.initUI()
 
     def initUI(self):
@@ -100,8 +153,6 @@ class MainWindow(QWidget):
         layout.setHorizontalSpacing(0)
         layout.setVerticalSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-
-        self.edit_boxes = []
 
         for i in range(9):
             row = []
@@ -120,9 +171,13 @@ class MainWindow(QWidget):
         button1.clicked.connect(self.load)
         button_layout.addWidget(button1)
 
-        button2 = QPushButton('Solve')
+        button2 = QPushButton('Solve slowly')
         button2.clicked.connect(self.solve)
         button_layout.addWidget(button2)
+
+        button3 = QPushButton('Solve instantly')
+        button3.clicked.connect(self.solve_instantly)
+        button_layout.addWidget(button3)
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(layout)
@@ -141,6 +196,21 @@ class MainWindow(QWidget):
                     self.edit_boxes[i][j].setStyleSheet("background-color: lightgray; color: black; font-size: 24px;")
                 else:
                     self.edit_boxes[i][j].setStyleSheet("background-color: gray; color: black; font-size: 24px;")
+
+    def update_values_prefilled(self, matrix):
+        for i in range(9):
+            for j in range(9):
+                self.edit_boxes[i][j].setText(str(matrix[i][j]))
+                if self.prefilled_matrix[i][j]:
+                    if (i // 3 + j // 3) % 2 == 0:
+                        self.edit_boxes[i][j].setStyleSheet("background-color: lightgray; color: black; font-size: 24px;")
+                    else:
+                        self.edit_boxes[i][j].setStyleSheet("background-color: gray; color: black; font-size: 24px;")
+                    # self.edit_boxes[i][j].setStyleSheet("background-color: white; color: black; font-size: 32px; border: 2px solid yellow;")
+                elif (i // 3 + j // 3) % 2 == 0:
+                    self.edit_boxes[i][j].setStyleSheet("background-color: lightgray; color: blue; font-family: Lucida Console; font-size: 36px;")
+                else:
+                    self.edit_boxes[i][j].setStyleSheet("background-color: gray; color: blue; font-family: Lucida Console; font-size: 36px;")
 
     def load(self):
         img_matrix = [[""] * 9 for _ in range(9)]
@@ -167,10 +237,13 @@ class MainWindow(QWidget):
                     if v > 0:
                         print(i,j,v)
                         img_matrix[i][j] = str(v)
+                        self.prefilled_matrix[i][j] = True
+                        self.worker.update_signal.connect(main_window.update_values_prefilled)
+
                     else:
                         img_matrix[i][j] = ""
                     self.matrix[i][j] = v
-        
+
         self.worker.update_signal.emit(img_matrix)
 
 
@@ -198,6 +271,13 @@ class MainWindow(QWidget):
         # new_matrix = generate_random_matrix()
         # self.worker.update_signal.emit(new_matrix)
         print("Sudoku solved ...")
+
+    def solve_instantly(self):
+        print("x")
+        R = self.worker.solve_sudoku(self.matrix,False,0)
+        self.worker.update_signal.emit(R)
+
+
 
 def run_method(obj_instance, method_name, parameter):
     method_to_run = getattr(obj_instance, method_name)
@@ -263,6 +343,7 @@ if __name__ == '__main__':
     matrix = [["" for _ in range(9)] for _ in range(9)]  # Initialize a 9x9 matrix with all zeros
     worker = Worker()
     main_window = MainWindow(matrix,worker)
+    worker.register_ui(main_window)
     worker.update_signal.connect(main_window.update_values)
     worker.start()
     sys.exit(app.exec_())
