@@ -152,7 +152,9 @@ class CropBigGrid:
     def get_combined_video_capture_and_cropped_full_grid(self, frame):
         full_frame, cropped_grid = self.contour_processor.process_image(frame)
 
-        # Combine the original frame (left) and the processed/last valid frame (right)
-        combined_frame = self.adjust_and_concatenate_images(full_frame, cropped_grid)
+        return full_frame, cropped_grid
 
-        return full_frame, cropped_grid, combined_frame
+        # # Combine the original frame (left) and the processed/last valid frame (right)
+        # combined_frame = self.adjust_and_concatenate_images(full_frame, cropped_grid)
+
+        # return full_frame, cropped_grid, combined_frame

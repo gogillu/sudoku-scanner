@@ -1,6 +1,4 @@
 # Add imports at the top
-from camera_handler import CameraHandler
-from big_contour_processor import BigContourProcessor
 from sudoku_user_feedback_handler import SudokuUserFeedbackHandler
 
 class MainController:
