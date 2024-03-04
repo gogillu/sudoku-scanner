@@ -6,49 +6,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from tenserflow_machine_digit_predict_model import *
 import threading
 
-from dlx import DLX
+# from dlx import DLX
 import numpy as np
-
-def solve_sudoku_instantly(M):
-
-    # print(M)
-    matrix = M
-    # i=0
-    # for _ in range(9):
-    #     row = []
-    #     j=0
-    #     for _ in range(9):
-    #         if M[i][j].isdigit():
-    #             row.append(int(M[i][j]))
-    #         else:
-    #             row.append(0)
-    
-    #         j += 1
-    #     i += 1
-    #     matrix.append(row)
-
-    dlx_matrix = np.zeros((9, 9, 9), dtype=int)
-
-    for i in range(9):
-        for j in range(9):
-            if matrix[i][j] != 0:
-                num = matrix[i][j] - 1
-                dlx_matrix[i, j, num] = 1
-
-    dlx_solver = DLX(dlx_matrix)
-    solution = dlx_solver.solve_unique()
-
-    if solution is None:
-        print("No solution exists")
-        return None
-
-    result_matrix = [[0 for _ in range(9)] for _ in range(9)]
-    for row in solution:
-        for r, c, num in row:
-            result_matrix[r][c] = num + 1
-
-    return result_matrix
-
 class Worker(QThread):
     update_signal = pyqtSignal(object)  # Signal to update the UI
 
@@ -172,7 +131,7 @@ class MainWindow(QWidget):
         button_layout.addWidget(button1)
 
         button2 = QPushButton('Solve slowly')
-        button2.clicked.connect(self.solve)
+        button2.clicked.connect(self.solve_old)
         button_layout.addWidget(button2)
 
         button3 = QPushButton('Solve instantly')
@@ -247,7 +206,7 @@ class MainWindow(QWidget):
         self.worker.update_signal.emit(img_matrix)
 
 
-    def solve(self):
+    def solve_old(self):
         for i in range(9):
             for j in range(9):
                 text = self.edit_boxes[i][j].text()
@@ -274,8 +233,54 @@ class MainWindow(QWidget):
 
     def solve_instantly(self):
         print("x")
-        R = self.worker.solve_sudoku(self.matrix,False,0)
-        self.worker.update_signal.emit(R)
+        sol = self.solve(self.matrix)
+        # R = self.worker.solve_sudoku(self.matrix,False,0)
+        self.worker.update_signal.emit(sol)
+
+    def is_valid(self, board, row, col, num):
+        # Check if the number is already in the row
+        if num in board[row]:
+            return False
+        
+        # Check if the number is already in the column
+        if num in [board[i][col] for i in range(9)]:
+            return False
+        
+        # Check if the number is already in the 3x3 box
+        start_row, start_col = 3 * (row // 3), 3 * (col // 3)
+        for i in range(start_row, start_row + 3):
+            for j in range(start_col, start_col + 3):
+                if board[i][j] == num:
+                    return False
+        
+        return True
+
+    def find_empty_location(self, board):
+        for i in range(9):
+            for j in range(9):
+                if board[i][j] == 0:
+                    return i, j
+        return -1, -1
+
+    def solve_sudoku_f(self, board):
+        row, col = self.find_empty_location(board)
+        if row == -1 and col == -1:
+            return True  # If no empty location left, Sudoku is solved
+        
+        for num in range(1, 10):
+            if self.is_valid(board, row, col, num):
+                board[row][col] = num
+                if self.solve_sudoku_f(board):
+                    return True
+                board[row][col] = 0  # Backtrack if the solution is not valid
+        return False
+
+    def solve(self, input_board):
+        board = [list(row) for row in input_board]
+        if self.solve_sudoku_f(board):
+            return board
+        else:
+            return "No solution exists."
 
 
 
