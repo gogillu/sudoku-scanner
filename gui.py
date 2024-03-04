@@ -233,9 +233,16 @@ class MainWindow(QWidget):
 
     def solve_instantly(self):
         print("x")
-        sol = self.solve(self.matrix)
+        sol, done = self.solve(self.matrix)
         # R = self.worker.solve_sudoku(self.matrix,False,0)
-        self.worker.update_signal.emit(sol)
+        if done:
+            print("solved")
+            print(sol)
+            self.worker.update_signal.emit(sol)
+        else:
+            print(self.matrix)
+            print("sol")
+
 
     def is_valid(self, board, row, col, num):
         # Check if the number is already in the row
@@ -278,9 +285,9 @@ class MainWindow(QWidget):
     def solve(self, input_board):
         board = [list(row) for row in input_board]
         if self.solve_sudoku_f(board):
-            return board
+            return board, True
         else:
-            return "No solution exists."
+            return "No solution exists.", False
 
 
 
