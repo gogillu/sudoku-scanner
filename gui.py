@@ -233,6 +233,14 @@ class MainWindow(QWidget):
 
     def solve_instantly(self):
         print("x")
+        for i in range(9):
+            for j in range(9):
+                text = self.edit_boxes[i][j].text()
+                if text.isdigit():
+                    self.matrix[i][j] = int(text)
+                else:
+                    self.matrix[i][j] = 0  # Treat empty fields as 0s
+
         sol, done = self.solve(self.matrix)
         # R = self.worker.solve_sudoku(self.matrix,False,0)
         if done:
