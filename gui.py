@@ -193,7 +193,7 @@ class MainWindow(QWidget):
                     # img_matrix[i][j] = 'individual_grids/grid_'+str(z)+'.jpg'
                     image_path = 'individual_grids/grid_'+str(z)+'.jpg'  # Specify the path to an image of a digit
                     v = predict_with_teachable_ml_optimized(image_path,self.model,self.class_names)
-                    if v > 0:
+                    if v is not None and v > 0:
                         print(i,j,v)
                         img_matrix[i][j] = str(v)
                         self.prefilled_matrix[i][j] = True
