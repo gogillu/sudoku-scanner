@@ -8,10 +8,10 @@ def predict_with_teachable_ml(image_path):
     np.set_printoptions(suppress=True)
 
     # Load the model
-    model = load_model("keras_Model.h5/keras_Model.h5", compile=False)
+    model = load_model("keras_Model.h5/converted_keras/keras_Model.h5", compile=False)
 
     # Load the labels
-    class_names = open("keras_Model.h5/labels.txt", "r").readlines()
+    class_names = open("keras_Model.h5/converted_keras/labels.txt", "r").readlines()
 
     # Create the array of the right shape to feed into the keras model
     # The 'length' or number of images you can put into the array is
@@ -47,9 +47,12 @@ def predict_with_teachable_ml(image_path):
     return (index+1)%10
 
 def loadModel():
+    # Disable scientific notation for clarity
+    np.set_printoptions(suppress=True)
+
     # Load the model and labels outside the function
-    model = load_model("keras_Model.h5/keras_Model.h5", compile=False)
-    with open("keras_Model.h5/labels.txt", "r") as file:
+    model = load_model("keras_Model.h5/converted_keras/keras_Model.h5", compile=False)
+    with open("keras_Model.h5/converted_keras/labels.txt", "r") as file:
         class_names = file.readlines()
 
     return model,class_names
@@ -71,4 +74,4 @@ def predict_with_teachable_ml_optimized(image_path, model, class_names):
     return (index + 1) % 10
 
 
-predict_with_teachable_ml("individual_grids/grid_74.jpg")
+# predict_with_teachable_ml("individual_grids/grid_74.jpg")
