@@ -18,6 +18,11 @@ Sudoku Scanner is a machine learning tool designed to solve Sudoku puzzles with 
 
 [![Watch the video](https://img.youtube.com/vi/7ta76SZ3ZFY/hqdefault.jpg)](https://www.youtube.com/watch?v=7ta76SZ3ZFY)
 
+## Sequence to run program
+
+1. python3 main.py
+2. python3 gui.py
+
 ## References
 
 1. https://www.deeplearning.ai/courses/machine-learning-specialization/
