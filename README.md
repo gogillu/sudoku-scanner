@@ -1,4 +1,4 @@
-# Project Title
+# Sudoku Scanner
 
 Sudoku Scanner is a machine learning tool designed to solve Sudoku puzzles with ease. By simply capturing an image of a Sudoku puzzle, the tool recognizes the digits, processes the grid, and provides a solution. This project uses computer vision techniques and a trained neural network model to accurately detect and solve Sudoku puzzles from images.
 
