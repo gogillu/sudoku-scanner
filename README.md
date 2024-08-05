@@ -12,10 +12,12 @@ Sudoku Scanner is a machine learning tool designed to solve Sudoku puzzles with 
 
 ## Demo Preview
 
+https://www.youtube.com/watch?v=9uN24XRxSF0
 [![Watch the video](https://img.youtube.com/vi/9uN24XRxSF0/hqdefault.jpg)](https://www.youtube.com/watch?v=9uN24XRxSF0)
 
 ## Demo - visualize solver
 
+https://www.youtube.com/watch?v=7ta76SZ3ZFY
 [![Watch the video](https://img.youtube.com/vi/7ta76SZ3ZFY/hqdefault.jpg)](https://www.youtube.com/watch?v=7ta76SZ3ZFY)
 
 ## Sequence to run program
