@@ -1,0 +1,20 @@
+# Core dependencies for Sudoku Scanner
+opencv-python>=4.5.0
+numpy>=1.19.0
+tensorflow>=2.8.0
+keras>=2.8.0
+
+# GUI framework
+PyQt5>=5.15.0
+
+# Image processing and OCR
+Pillow>=8.0.0
+pytesseract>=0.3.8
+keras-ocr>=0.8.8
+
+# Additional utilities
+matplotlib>=3.3.0
+scipy>=1.7.0
+
+# Optional dependencies for development
+jupyter>=1.0.0

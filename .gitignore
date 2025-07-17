@@ -7,3 +7,7 @@ processed
 *.avi
 *.thread
 individual_grids/*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
