@@ -207,25 +207,46 @@ To train your own digit recognition model:
 - Close other applications to free up system resources
 - Use the instant solve mode for faster results
 
+## Documentation
+
+This project includes comprehensive documentation:
+
+- **[README.md](README.md)** - Main documentation (this file)
+- **[API.md](API.md)** - Detailed API documentation for all classes and methods
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guide for contributors
+- **[requirements.txt](requirements.txt)** - Python dependencies
+- **[check_installation.py](check_installation.py)** - Installation verification script
+- **[examples.py](examples.py)** - Example usage and API demonstrations
+
 ## File Structure
 
 ```
 sudoku-scanner/
-├── main.py                              # Main entry point for camera processing
-├── gui.py                              # PyQt5 GUI interface
-├── requirements.txt                     # Python dependencies
-├── camera_feed.py                      # Camera interface
-├── contour_processor.py               # Image contour detection
-├── crop_big_grid.py                   # Grid extraction and cropping
-├── detect_small_grid.py               # Individual cell detection
-├── digit_recognizer.py                # Digit recognition using ML
-├── dlx.py                             # Dancing Links Algorithm
-├── image_grid_processor.py            # Grid processing utilities
-├── sudoku_user_feedback_handler.py    # User interaction handler
+├── README.md                           # Main documentation
+├── API.md                             # API reference documentation
+├── CONTRIBUTING.md                    # Development and contribution guide
+├── requirements.txt                   # Python dependencies
+├── check_installation.py             # Installation verification
+├── examples.py                       # Usage examples
+│
+├── main.py                           # Main entry point for camera processing
+├── gui.py                           # PyQt5 GUI interface
+├── sudoku_user_feedback_handler.py  # User interaction handler
+│
+├── camera_feed.py                   # Camera interface
+├── camera_handler.py               # Camera management
+├── contour_processor.py            # Image contour detection
+├── crop_big_grid.py                # Grid extraction and cropping
+├── detect_small_grid.py            # Individual cell detection
+├── image_grid_processor.py         # Grid processing utilities
+│
+├── digit_recognizer.py             # Digit recognition using ML
 ├── tenserflow_machine_digit_predict_model.py  # TensorFlow model interface
-├── individual_grids/                   # Extracted digit images
-├── keras_Model.h5                     # Pre-trained Keras model
-└── mnist.h5                           # MNIST-based model
+├── dlx.py                          # Dancing Links Algorithm
+│
+├── individual_grids/               # Extracted digit images (created at runtime)
+├── keras_Model.h5                 # Pre-trained Keras model
+└── mnist.h5                       # MNIST-based model
 ```
 
 ## Contributing
